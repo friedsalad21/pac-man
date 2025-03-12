@@ -28,6 +28,29 @@ const powerPelletCount = 4;
 let powerMode = false;
 let powerModeTimer = 0;
 
+const map = [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+];
+
+const tileSize = 40;
+
+let lives = 3;
+let level = 1;
+let gameStarted = false;
+
 function createPellets() {
     for (let i = 0; i < pelletCount; i++) {
         const x = Math.random() * canvas.width;
@@ -83,6 +106,20 @@ function drawGhosts() {
     });
 }
 
+function drawMap() {
+    for (let row = 0; row < map.length; row++) {
+        for (let col = 0; col < map[row].length; col++) {
+            if (map[row][col] === 1) {
+                ctx.fillStyle = 'blue';
+                ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
+            } else if (map[row][col] === 0) {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
+            }
+        }
+    }
+}
+
 function updatePacMan() {
     if (pacMan.direction === 'right') {
         pacMan.x += pacMan.speed;
@@ -102,16 +139,22 @@ function updatePacMan() {
 
 function updateGhosts() {
     ghosts.forEach(ghost => {
+        const dx = pacMan.x - ghost.x;
+        const dy = pacMan.y - ghost.y;
+        const distance = Math.hypot(dx, dy);
+
+        if (distance < 200) {
+            if (Math.abs(dx) > Math.abs(dy)) {
+                ghost.direction = dx > 0 ? 'right' : 'left';
+            } else {
+                ghost.direction = dy > 0 ? 'down' : 'up';
+            }
+        }
+
         if (ghost.direction === 'right') ghost.x += ghost.speed;
         if (ghost.direction === 'left') ghost.x -= ghost.speed;
         if (ghost.direction === 'up') ghost.y -= ghost.speed;
         if (ghost.direction === 'down') ghost.y += ghost.speed;
-
-        // Change direction randomly
-        if (Math.random() < 0.01) {
-            const directions = ['right', 'left', 'up', 'down'];
-            ghost.direction = directions[Math.floor(Math.random() * directions.length)];
-        }
 
         // Wrap around canvas edges
         if (ghost.x > canvas.width) ghost.x = 0;
@@ -164,12 +207,47 @@ function drawScore() {
     ctx.fillText(`Score: ${score}`, 10, 20);
 }
 
+function drawLives() {
+    ctx.fillStyle = 'white';
+    ctx.font = '20px Arial';
+    ctx.fillText(`Lives: ${lives}`, 10, 40);
+}
+
+function drawLevel() {
+    ctx.fillStyle = 'white';
+    ctx.font = '20px Arial';
+    ctx.fillText(`Level: ${level}`, 10, 60);
+}
+
+function startScreen() {
+    ctx.fillStyle = 'white';
+    ctx.font = '40px Arial';
+    ctx.fillText('Press Enter to Start', canvas.width / 2 - 150, canvas.height / 2);
+}
+
 function clearCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !gameStarted) {
+        gameStarted = true;
+        gameLoop();
+    }
+    if (event.key === 'ArrowRight') pacMan.direction = 'right';
+    if (event.key === 'ArrowLeft') pacMan.direction = 'left';
+    if (event.key === 'ArrowUp') pacMan.direction = 'up';
+    if (event.key === 'ArrowDown') pacMan.direction = 'down';
+});
+
 function gameLoop() {
+    if (!gameStarted) {
+        startScreen();
+        return;
+    }
+
     clearCanvas();
+    drawMap();
     drawPellets();
     drawPowerPellets();
     drawPacMan();
@@ -180,6 +258,8 @@ function gameLoop() {
     checkPowerPelletCollision();
     checkGhostCollision();
     drawScore();
+    drawLives();
+    drawLevel();
 
     if (powerMode) {
         powerModeTimer--;
@@ -190,13 +270,6 @@ function gameLoop() {
 
     requestAnimationFrame(gameLoop);
 }
-
-document.addEventListener('keydown', (event) => {
-    if (event.key === 'ArrowRight') pacMan.direction = 'right';
-    if (event.key === 'ArrowLeft') pacMan.direction = 'left';
-    if (event.key === 'ArrowUp') pacMan.direction = 'up';
-    if (event.key === 'ArrowDown') pacMan.direction = 'down';
-});
 
 createPellets();
 createPowerPellets();
