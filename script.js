@@ -1,11 +1,29 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+const tileSize = 20; // Adjusted tile size
+const map = [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+];
+
 const pacMan = {
-    x: 50,
-    y: 50,
-    radius: 20,
-    speed: 5,
+    x: tileSize * 1.5,
+    y: tileSize * 1.5,
+    radius: tileSize / 2,
+    speed: 2,
     angle1: 0.25 * Math.PI,
     angle2: 1.75 * Math.PI,
     direction: 'right'
@@ -17,8 +35,8 @@ const pelletCount = 50;
 let score = 0;
 
 const ghosts = [
-    { x: 100, y: 100, radius: 20, speed: 2, direction: 'left', color: 'red' },
-    { x: 200, y: 200, radius: 20, speed: 2, direction: 'up', color: 'pink' },
+    { x: tileSize * 10, y: tileSize * 10, radius: tileSize / 2, speed: 1.5, direction: 'left', color: 'red' },
+    { x: tileSize * 15, y: tileSize * 15, radius: tileSize / 2, speed: 1.5, direction: 'up', color: 'pink' },
     // Add more ghosts as needed
 ];
 
@@ -27,25 +45,6 @@ const powerPelletRadius = 10;
 const powerPelletCount = 4;
 let powerMode = false;
 let powerModeTimer = 0;
-
-const map = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
-    [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-];
-
-const tileSize = 40;
 
 let lives = 3;
 let level = 1;
@@ -121,14 +120,20 @@ function drawMap() {
 }
 
 function updatePacMan() {
-    if (pacMan.direction === 'right') {
-        pacMan.x += pacMan.speed;
-    } else if (pacMan.direction === 'left') {
-        pacMan.x -= pacMan.speed;
-    } else if (pacMan.direction === 'up') {
-        pacMan.y -= pacMan.speed;
-    } else if (pacMan.direction === 'down') {
-        pacMan.y += pacMan.speed;
+    let nextX = pacMan.x;
+    let nextY = pacMan.y;
+
+    if (pacMan.direction === 'right') nextX += pacMan.speed;
+    if (pacMan.direction === 'left') nextX -= pacMan.speed;
+    if (pacMan.direction === 'up') nextY -= pacMan.speed;
+    if (pacMan.direction === 'down') nextY += pacMan.speed;
+
+    const col = Math.floor(nextX / tileSize);
+    const row = Math.floor(nextY / tileSize);
+
+    if (map[row][col] === 0) {
+        pacMan.x = nextX;
+        pacMan.y = nextY;
     }
 
     if (pacMan.x > canvas.width) pacMan.x = 0;
@@ -151,12 +156,22 @@ function updateGhosts() {
             }
         }
 
-        if (ghost.direction === 'right') ghost.x += ghost.speed;
-        if (ghost.direction === 'left') ghost.x -= ghost.speed;
-        if (ghost.direction === 'up') ghost.y -= ghost.speed;
-        if (ghost.direction === 'down') ghost.y += ghost.speed;
+        let nextX = ghost.x;
+        let nextY = ghost.y;
 
-        // Wrap around canvas edges
+        if (ghost.direction === 'right') nextX += ghost.speed;
+        if (ghost.direction === 'left') nextX -= ghost.speed;
+        if (ghost.direction === 'up') nextY -= ghost.speed;
+        if (ghost.direction === 'down') nextY += ghost.speed;
+
+        const col = Math.floor(nextX / tileSize);
+        const row = Math.floor(nextY / tileSize);
+
+        if (map[row][col] === 0) {
+            ghost.x = nextX;
+            ghost.y = nextY;
+        }
+
         if (ghost.x > canvas.width) ghost.x = 0;
         if (ghost.x < 0) ghost.x = canvas.width;
         if (ghost.y > canvas.height) ghost.y = 0;
