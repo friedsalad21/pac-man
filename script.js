@@ -11,6 +11,29 @@ const pacMan = {
     direction: 'right'
 };
 
+const pellets = [];
+const pelletRadius = 5;
+const pelletCount = 50;
+let score = 0;
+
+function createPellets() {
+    for (let i = 0; i < pelletCount; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        pellets.push({ x, y });
+    }
+}
+
+function drawPellets() {
+    pellets.forEach(pellet => {
+        ctx.beginPath();
+        ctx.arc(pellet.x, pellet.y, pelletRadius, 0, 2 * Math.PI, false);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+        ctx.closePath();
+    });
+}
+
 function drawPacMan() {
     ctx.beginPath();
     ctx.arc(pacMan.x, pacMan.y, pacMan.radius, pacMan.angle1, pacMan.angle2, false);
@@ -37,14 +60,33 @@ function updatePacMan() {
     if (pacMan.y < 0) pacMan.y = canvas.height;
 }
 
+function checkPelletCollision() {
+    pellets.forEach((pellet, index) => {
+        const dist = Math.hypot(pacMan.x - pellet.x, pacMan.y - pellet.y);
+        if (dist < pacMan.radius + pelletRadius) {
+            pellets.splice(index, 1);
+            score += 10;
+        }
+    });
+}
+
+function drawScore() {
+    ctx.fillStyle = 'white';
+    ctx.font = '20px Arial';
+    ctx.fillText(`Score: ${score}`, 10, 20);
+}
+
 function clearCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 function gameLoop() {
     clearCanvas();
+    drawPellets();
     drawPacMan();
     updatePacMan();
+    checkPelletCollision();
+    drawScore();
     requestAnimationFrame(gameLoop);
 }
 
@@ -55,4 +97,5 @@ document.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowDown') pacMan.direction = 'down';
 });
 
+createPellets();
 gameLoop();
